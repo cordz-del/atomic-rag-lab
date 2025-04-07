@@ -1,19 +1,46 @@
+import os
 import streamlit as st
-from langchain.llms import OpenAI
-from langchain.document_loaders import PyPDFLoader
-from langchain.indexes import VectorstoreIndexCreator
+from llama_index import GPTSimpleVectorIndex, SimpleDirectoryReader
 
-st.title("Atomic RAG Lab")
+def load_qchem_index(path: str = "quantum_chemistry_papers") -> GPTSimpleVectorIndex:
+    """
+    Build or load an index of quantum chemistry papers or resources.
+    """
+    index_file = "qchem_index.json"
+    if os.path.exists(index_file):
+        # Load existing index
+        index = GPTSimpleVectorIndex.load_from_disk(index_file)
+    else:
+        # Otherwise, read docs from folder and build a new one
+        docs = SimpleDirectoryReader(path).load_data()
+        index = GPTSimpleVectorIndex.from_documents(docs)
+        index.save_to_disk(index_file)
+    return index
 
-openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+def main():
+    st.title("Atomic RAG Lab")
 
-uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
+    st.markdown("""
+    **Welcome to the Atomic RAG Lab**  
+    Ask about quantum chemistry topics: 
+    electron density, UV-Vis transitions, molecular orbitals, etc.  
+    This app uses a RAG approach to find relevant info from local papers.
+    """)
 
-if uploaded_file and openai_api_key:
-    loader = PyPDFLoader(uploaded_file)
-    index = VectorstoreIndexCreator().from_loaders([loader])
-    llm = OpenAI(openai_api_key=openai_api_key)
-    query = st.text_input("Ask a question about the PDF")
-    if query:
-        response = index.query(query, llm=llm)
-        st.write(response)
+    # Load or build index
+    index = load_qchem_index("quantum_chemistry_papers")
+
+    question = st.text_input("Your quantum chemistry question:")
+    if st.button("Query"):
+        if question.strip():
+            response = index.query(question)
+            st.write("**Answer:**")
+            st.write(response)
+        else:
+            st.warning("Please enter a question.")
+
+    st.markdown("---")
+    st.info("**Note**: Make sure you have a 'quantum_chemistry_papers' folder with PDF/text docs if you want real data retrieval.")
+
+if __name__ == "__main__":
+    main()

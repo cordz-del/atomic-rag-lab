@@ -40,3 +40,8 @@ The Atomic RAG Lab is a Language Model (LLM) that explains quantum chemistry con
 
 - Ensure you have an OpenAI API key to use the GPT-4 model.
 - The app may take a few moments to process large PDFs and generate responses.
+
+
+## Live Demo
+
+Check out the running app on [Hugging Face Spaces](https://huggingface.co/spaces/cordz-del/atomic-rag-lab).
